@@ -1,0 +1,48 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: rerum-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  rerum-api:
+    build:
+      context: ./rerum_server_nodejs
+    container_name: rerumapi
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+      - tiny-node
+    environment:
+      - TINYNODE_URL=http://tinynode:3002
+    env_file:
+      - ./rerum_server_nodejs/.env
+
+  tiny-node:
+    build:
+      context: ./TinyNode
+    container_name: tinynode
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/tinynode
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=
+      - ME_CONFIG_BASICAUTH_PASSWORD=
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo-data:
