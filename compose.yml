@@ -43,6 +43,6 @@ services:
       - ME_CONFIG_BASICAUTH_PASSWORD=
     depends_on:
       - mongodb
-
+       
 volumes:
   mongo-data:

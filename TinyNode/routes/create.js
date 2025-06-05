@@ -18,8 +18,22 @@ router.post('/', checkAccessToken, async (req, res, next) => {
       }
     }
     const createURL = `${process.env.RERUM_API_ADDR}create`
-    const result = await fetch(createURL, createOptions).then(res=>res.json())
-    .catch(err=>next(err))
+    const result = await fetch(createURL, createOptions).then(res => {
+      if (!res.ok) {
+        throw new Error(`RERUM API error: ${res.status}`);
+      }
+      return res.json();
+    });
+
+      // Save to MongoDB
+    const db = await connectDB();
+    const collection = db.collection('testing');
+    await collection.insertOne({
+        ...req.body,
+        rerumId: result["@id"] ?? result.id,
+        createdAt: new Date()
+    });
+
     res.setHeader("Location", result["@id"] ?? result.id)
     res.status(201)
     res.json(result)
