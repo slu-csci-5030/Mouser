@@ -1,0 +1,61 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: rerum-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  rerum-api:
+    build:
+      context: ./rerum_server_nodejs
+    container_name: rerumapi
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+      - tiny-node
+    environment:
+      - TINYNODE_URL=http://tinynode:3002
+    env_file:
+      - ./rerum_server_nodejs/.env
+    command: ["npm", "start"]  
+
+  tiny-node:
+    build:
+      context: ./TinyNode
+    container_name: tinynode
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/tinynode
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_BASICAUTH_USERNAME=
+      - ME_CONFIG_BASICAUTH_PASSWORD=
+    depends_on:
+      - mongodb
+  localauth0:
+    image: public.ecr.aws/primaassicurazioni/localauth0:0.8.2
+    healthcheck:
+      test: ["CMD", "/localauth0", "healthcheck"]
+    ports:
+      - "3000:3000"  # Or any other port you choose
+    environment:
+      - AUTH0_DOMAIN=local_rerum.auth0.com  # Replace with your Auth0 domain
+      - AUTH0_CLIENT_ID=rerum      # Replace with your client ID
+      - AUTH0_CLIENT_SECRET=rerum # Replace with your client secret
+      - AUTH0_CALLBACK_URL=http://localhost:3001/callback # Replace with your app's callback URL
+    restart: "no"
+     
+volumes:
+  mongo-data:
