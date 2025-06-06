@@ -4,12 +4,13 @@
  * Module dependencies.
  */
 
+import dotenv from "dotenv"
+dotenv.config()
 import app from '../app.js'
 import debug from 'debug'
 debug('rerum_server_nodejs:server')
 import http from "http"
-import dotenv from "dotenv"
-dotenv.config()
+
 
 /**
  * Get port from environment and store in Express.
@@ -73,4 +74,15 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port
   debug('Listening on ' + bind)
+}
+import { trusted } from '../services/token-service.js'
+
+// Add a dummy trusted agent for dev mode
+if (process.env.DEV_MODE === 'true') {
+  trusted.set('devmode123', {
+    name: "Dev Agent",
+    role: "developer",
+    email: "dev@rerum.io"
+  })
+  console.log(" Dev token registered manually in trusted agents.")
 }
