@@ -8,6 +8,7 @@ from shared.scrollable_frame import ScrolledFrame
 from shared.experiment import Experiment
 from experiment_pages.experiment.experiment_menu_ui import ExperimentMenuUI
 from shared.password_utils import PasswordManager
+from shared.tooltip_utils import ToolTip
 
 class CreateExperimentButton(CTkButton):
     '''Button to save a new experiment.'''
@@ -67,7 +68,22 @@ class SummaryUI(MouserPage):# pylint: disable=undefined-variable
         self.input = experiment
         self.menu = menu_page
 
-        CreateExperimentButton(experiment, self, menu_page)
+        create_btn = CreateExperimentButton(experiment, self, menu_page)
+
+        ToolTip(create_btn, "Create and save the experiment")
+
+        save_annotation_button = CTkButton(
+            self,
+            text="Save annotation",
+            state="disabled",
+            width=15,
+            fg_color="#98FB98",
+            hover_color="#90EE90",
+            text_color="black"
+        )
+        save_annotation_button.place(relx=0.92, rely=0.15, anchor=CENTER)
+        ToolTip(save_annotation_button, "This will save annotations. (Disabled for now)")
+
 
         scroll_canvas = ScrolledFrame(self)
         scroll_canvas.place(relx=0.10, rely=0.25, relheight=0.7, relwidth=0.8)
