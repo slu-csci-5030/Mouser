@@ -1,0 +1,8 @@
+## Running setup.sh for quick setup
+
+Use:
+chmod +x setup.sh
+./setup.sh
+
+
+This will setup the docker-compose.yml and .env file, also it will clone the repo if not available.
