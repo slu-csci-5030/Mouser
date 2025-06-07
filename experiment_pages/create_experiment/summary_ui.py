@@ -77,8 +77,8 @@ class SummaryUI(MouserPage):# pylint: disable=undefined-variable
             text="Save annotation",
             state="disabled",
             width=15,
-            fg_color="#98FB98",
-            hover_color="#90EE90",
+            fg_color="#289228",
+            hover_color="#6DDB6D",
             text_color="black"
         )
         save_annotation_button.place(relx=0.92, rely=0.15, anchor=CENTER)
