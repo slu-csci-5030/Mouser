@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GitHub Issue Tracker</title>
+</head>
+<body>
+  <h2>📊 GitHub Issues</h2>
+  <ul>
+    <li>🟢 Open Issues: <span id="open"></span></li>
+    <li>🔴 Closed Issues: <span id="closed"></span></li>
+  </ul>
+
+  <script>
+    const repo = "slu-csci-5030/Mouser";
+    fetch(`https://api.github.com/repos/${repo}/issues?state=open`)
+      .then(res => res.json())
+      .then(data => document.getElementById("open").innerText = data.length);
+
+    fetch(`https://api.github.com/repos/${repo}/issues?state=closed`)
+      .then(res => res.json())
+      .then(data => document.getElementById("closed").innerText = data.length);
+  </script>
+</body>
+</html>
