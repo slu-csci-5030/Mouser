@@ -1,5 +1,6 @@
 '''New Experiment Module'''
 from os.path import *
+import tkinter
 
 from CTkMessagebox import CTkMessagebox
 from customtkinter import *
@@ -204,63 +205,82 @@ class NewExperimentUI(MouserPage):# pylint: disable= undefined-variable
         label = CTkLabel(edit_dialog, text="Enter 4-digit Experiment ID:")
         label.pack(pady=10)
 
-        id_entry = CTkEntry(edit_dialog, width=80)
-        id_entry.pack(pady=5)
+        e_id = CTkEntry(edit_dialog, width=80)
+        e_id.pack(pady=5)
 
-        listbox = CTkTextbox(edit_dialog, height=120, width=350)
-        listbox.pack(pady=10)
-        listbox.configure(state="disabled")
+        annotation_var = tkinter.StringVar()
+        annotation_dropdown = CTkComboBox(edit_dialog, variable=annotation_var, width=300, state="disabled")
+        annotation_dropdown.pack(pady=10)
 
-        selected_index = [None]  # Store selected annotation index
+        text_label=CTkLabel(edit_dialog, text="Edit annotation: ")
+        text_label.pack(pady=5)
+        text_entry=CTkEntry(edit_dialog, width=300)
+        text_entry.pack(pady=5)
+
+        annotation_list = []
 
         def load_annotations_for_editing():
-            experiment_id = id_entry.get().strip()
+            experiment_id = e_id.get().strip()
+            if len(experiment_id) != 4 or not experiment_id.isdigit():
+                CTkMessagebox(title="Error", message="Invalid experiment ID", icon="cancel")
+                return
+            
             annotations, error = get_annotations(experiment_id)
-            listbox.configure(state="normal")
-            listbox.delete("1.0", "end")
+            print("Fetched annotations:", annotations)
             if annotations:
-                for idx, ann in enumerate(annotations):
-                    text = ann.get("body", {}).get("value", "[No Value]")
-                    listbox.insert("end", f"{idx + 1}. {text}\n")
-                selected_index[0] = annotations  # Save full list
+                annotation_list.clear()
+                filtered=[]
+                for ann in annotations:
+                    value = ann.get("body", {}).get("value", "[No Value]")
+                    ann_id=ann.get("@id") or ann.get("id")
+                    ann_id = ann_id.split("/")[-1] 
+                    if ann_id:
+                        filtered.append(value)
+                        annotation_list.append(ann)
+                if filtered:
+                    annotation_dropdown.configure(values=filtered,state="normal")
+                    annotation_var.set(filtered[0])
+                else:
+                    annotation_dropdown.configure(values=["No editable annotations found"], state="disabled")
+                    annotation_var.set("")
             else:
-                listbox.insert("end", f"Error: {error or 'No annotations found.'}")
-            listbox.configure(state="disabled")
+                    CTkMessagebox(title="Error",message=f"No annotations found. {error if error else ''}", icon="cancel")
+                    annotation_dropdown.configure(values=["No annotations found"], state="disabled")
 
         def edit_selected_annotation():
-            annotation_list = selected_index[0]
-            if not annotation_list:
+            selected_text = annotation_var.get()
+            new_text = text_entry.get().strip()
+
+            if not new_text:
+                CTkMessagebox(title="Error", message="Please enter new text.", icon="cancel")
                 return
-            # For simplicity, edit the first annotation (index 0)
-            old = annotation_list[0]
-            edit_box = CTkToplevel(self)
-            edit_box.title("Edit Annotation")
-            edit_box.geometry("400x200")
 
-            textbox = CTkTextbox(edit_box, height=80, width=350)
-            textbox.insert("1.0", old["body"]["value"])
-            textbox.pack(pady=10)
+            for ann in annotation_list:
+                if ann.get("body", {}).get("value", "") == selected_text:
+                    annotation_id = ann.get("id") or ann.get("@id")
+                    if not annotation_id:
+                        CTkMessagebox(title="Error", message="Annotation ID missing.", icon="cancel")
+                        return
 
-            def update_annotation():
-                new_text = textbox.get("1.0", "end").strip()
-                if new_text and new_text != old["body"]["value"]:
-                    updated = old.copy()
-                    updated["body"]["value"] = new_text
-                    success, error = update_annotation(old["@id"], new_text)
+                    #  Call the updated method
+                    success, error = update_annotation(annotation_id, new_text)
+
                     if success:
-                        CTkMessagebox(title="Success", message="Annotation updated!", icon="check")
-                        edit_box.destroy()
+                        CTkMessagebox(title="Success", message="Annotation updated successfully!", icon="check")
+                        load_annotations_for_editing()  # Optional: refresh list
                     else:
-                        CTkMessagebox(title="Error", message=f"Failed to update: {error}", icon="cancel")
+                        CTkMessagebox(title="Error", message=f"Update failed: {error}", icon="cancel")
+                    return
 
-            submit_btn = CTkButton(edit_box, text="Submit", command=update_annotation)
-            submit_btn.pack(pady=10)
+            CTkMessagebox(title="Error", message="Selected annotation not found in memory.", icon="cancel")
 
+           
         fetch_btn = CTkButton(edit_dialog, text="Fetch", command=load_annotations_for_editing)
         fetch_btn.pack(pady=5)
 
-        edit_btn = CTkButton(edit_dialog, text="Edit First Annotation", command=edit_selected_annotation)
-        edit_btn.pack(pady=5)
+        update_btn = CTkButton(edit_dialog, text="Update", command=edit_selected_annotation)
+        update_btn.pack(pady=5)
+
 
     def open_load_annotations_dialog(self):
 
